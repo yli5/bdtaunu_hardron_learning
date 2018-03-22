@@ -83,7 +83,7 @@ class MLP:
 					_, c = sess.run([self.optimizer, self.cost], feed_dict={self.x: batch_x,
 																  self.y: batch_y})
 					avg_cost += c / total_batch
-				print("Epoch:", '%04d' % (epoch+1), "cost=", "{:.9f}".format(avg_cost))
+				print("Epoch:", '%04d' % (epoch+1), "cost={:.9f}".format(avg_cost))
 			# save model
 			self.saver.save(sess, '../models/{0}/mlp'.format(self.config['model_name']))
 		return
@@ -114,7 +114,7 @@ def test():
 	y_b = np.zeros(10000)
 	X = np.concatenate([X_s, X_b])
 	y = np.concatenate([y_s, y_b])
-	Y = Y = np.array([y, -(y-1)]).T
+	Y = np.array([y, -(y-1)]).T
 	X, Y = shuffle(X, Y)
 
 	# define config json and parameters
@@ -136,7 +136,42 @@ def test():
 
 
 if __name__ == '__main__':
-	test()
+	#test()
+	import sys
+	from os import path
+	lib_path = path.dirname(path.dirname(path.abspath(__file__)))
+	sys.path.append(lib_path)
+	from preprocess.PreProcess import PreProcess
+	from preprocess.LearningDataAdapter import LearningDataAdapter
+	from util.resampling import binary_downsampling, binary_upsampling
+
+	print 'Loading data and preprocessing ......'
+	# adapter
+	adapter = LearningDataAdapter(for_learning=True)
+	adapter.adapt_file('../data/train.csv')
+	X_num, X_cat = adapter.X_num, adapter.X_cat
+	w, y = adapter.w, adapter.y
+	# processor
+	processor = PreProcess()
+	processor.fit(X_num, X_cat, 
+	              {'imputer': '../preprocess/imputer.pkl',
+	               'scaler': '../preprocess/scaler.pkl',
+	               'encoder': '../preprocess/encoder.pkl'})
+	X = processor.transform(X_num, X_cat)
+	# resample
+	X_train, y_train = binary_upsampling(X, y)
+	Y_train = np.array([y_train, -(y_train-1)]).T
+	print 
+
+	print 'Training ......'
+	# train
+	config = {'model_name': 'mlp_0321',
+			  'learning_rate': 0.001,
+			  'training_epochs': 100,
+			  'batch_size': 100}
+	mlp = MLP(X_train.shape[1], [100, 100], 2, config)
+	mlp.train(X_train, Y_train)
+	mlp.evaluate(X_train, Y_train)
 
 	
 
