@@ -138,6 +138,7 @@ def test():
 if __name__ == '__main__':
 	#test()
 	import sys
+        import time
 	from os import path
 	lib_path = path.dirname(path.dirname(path.abspath(__file__)))
 	sys.path.append(lib_path)
@@ -146,6 +147,7 @@ if __name__ == '__main__':
 	from util.resampling import binary_downsampling, binary_upsampling
 
 	print 'Loading data and preprocessing ......'
+        start_time = time.time()
 	# adapter
 	adapter = LearningDataAdapter(for_learning=True)
 	adapter.adapt_file('../data/train.csv')
@@ -161,20 +163,26 @@ if __name__ == '__main__':
 	# resample
 	X_train, y_train = binary_upsampling(X, y)
 	Y_train = np.array([y_train, -(y_train-1)]).T
+
+        end = time.time()
+        print 'Done. Took {} seconds.'.format(end - start_time)
 	print 
 
 	print 'Training ......'
+        start = time.time()
 	# train
 	config = {'model_name': 'mlp_0321',
 			  'learning_rate': 0.001,
-			  'training_epochs': 100,
+			  'training_epochs': 10,
 			  'batch_size': 100}
 	mlp = MLP(X_train.shape[1], [100, 100], 2, config)
 	mlp.train(X_train, Y_train)
+        end = time.time()
+        print 'Done. Took {} seconds.'.format(end - start)
+        print
+
 	mlp.evaluate(X_train, Y_train)
-
-	
-
-
-		
+        end = time.time()
+        print 'Complete. Took total of {} seconds.'.format(end - start_time)
+        print
 
