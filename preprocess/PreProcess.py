@@ -1,6 +1,7 @@
 import numpy as np 
 import sklearn.preprocessing as preprocessing
 from sklearn.externals import joblib
+from LearningDataAdapter import LearningDataAdapter
 
 class PreProcess:
     """
@@ -68,6 +69,34 @@ class PreProcess:
             X_cat = self.encoder.transform(X_cat)
         return np.hstack((X_num, X_cat))
 
+
+def load_data(data_path, processor_paths, fit=True):
+    """
+    Wrap of LearningDataAdapter and PreProcess to load data in one line.
+    
+    data_path      : string, path to data, currently support .csv file.
+    processor_paths: dict, in the form of {'imputer': 'imputer_save_path',
+                                           'scaler' : 'scaler_save_path',
+                                           'encoder': 'encoder_save_path'}
+    fit            : boolean, default is True. If it is true, it means we need to fit imputer,
+                     scaler and encoder and save them in processor_paths. Otherwise, these 
+                     transformations are already existed, and we only need to load them.
+
+    """
+    # adapter
+    adapter = LearningDataAdapter(for_learning=True)
+    adapter.adapt_file(data_path)
+    X_num, X_cat = adapter.X_num, adapter.X_cat
+    w, y = adapter.w, adapter.y
+    
+    # preprocessor
+    processor = PreProcess()
+    if fit:
+        processor.fit(X_num, X_cat, processor_paths)
+    else:
+        processor.load(processor_paths)
+    X_trans = processor.transform(X_num, X_cat)
+    return X_trans, y, w
     
 
 def test():
@@ -98,10 +127,39 @@ def test():
     return
 
 
+def test_load():
+    import time
+    data_path = '../data/train.csv'
+    processor_path = {'imputer': './imputer.pkl',
+                      'scaler': './scaler.pkl',
+                      'encoder': './encoder.pkl'}
+
+    start_time = time.time()
+    X, y, w = load_data(data_path, processor_path, fit=True) 
+    end_time = time.time()
+    print 'X column means: '
+    print np.mean(X, axis=0)
+    print 'X column std: '
+    print np.std(X, axis=0)
+    print 'Shapes : '
+    print X.shape, y.shape, w.shape
+    print 'Done. Took {} seconds.'.format(end_time - start_time)
+
+    start_time = time.time()
+    X, y, w = load_data(data_path, processor_path, fit=False)
+    end_time = time.time()
+    print 'X column means: '
+    print np.mean(X, axis=0)
+    print 'X column std: '
+    print np.std(X, axis=0)
+    print 'Shapes : '
+    print X.shape, y.shape, w.shape
+    print 'Done. Took {} seconds.'.format(end_time - start_time)
+    return
 
 if __name__ == '__main__':
-   test()
-
+    test()
+    test_load()
 
 
 
