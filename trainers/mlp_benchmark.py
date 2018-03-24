@@ -161,8 +161,10 @@ if __name__ == '__main__':
 	               'encoder': '../preprocess/encoder.pkl'})
 	X = processor.transform(X_num, X_cat)
 	# resample
-	X_train, y_train = binary_upsampling(X, y)
+	X_train, y_train, w_train = binary_upsampling(X, y, w)
 	Y_train = np.array([y_train, -(y_train-1)]).T
+        print 'Input data shapes:'
+        print 'X shape: {0}   Y shape: {1}    w shape: {2}'.format(X_train.shape, y_train.shape, w_train.shape)
 
         end = time.time()
         print 'Done. Took {} seconds.'.format(end - start_time)
