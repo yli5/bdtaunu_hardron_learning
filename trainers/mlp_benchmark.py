@@ -150,9 +150,11 @@ if __name__ == '__main__':
     process_path = {'imputer': '../preprocess/imputer.pkl', 'scaler': '../preprocess/scaler.pkl', 'encoder': '../preprocess/encoder.pkl'}
     X, y, w = load_data('../data/train.csv', process_path, fit=False)
     # resample
-    X_train, y_train = binary_upsampling(X, y)
+    X_train, y_train, w_train = binary_upsampling(X, y, w)
     Y_train = np.array([y_train, -(y_train-1)]).T
     end = time.time()
+    print 'Input Shapes : '
+    print 'X_train: {0}    Y_train: {1}    w_train: {2}'.format(X_train.shape, Y_train.shape, w_train.shape)
     print 'Done. Took {} seconds.'.format(end - start_time)
     print
 
