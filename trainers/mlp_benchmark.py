@@ -1,5 +1,7 @@
 import numpy as np
+import os
 import tensorflow as tf 
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 from sklearn.utils import shuffle
 
 class MLP:
