@@ -1,7 +1,8 @@
 import numpy as np
+import os
 import tensorflow as tf 
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 from sklearn.utils import shuffle
-
 
 class MLP:
     """
@@ -99,8 +100,9 @@ class MLP:
             y_pred_prob = tf.nn.softmax(self.out_layer)
             correct_prediction = tf.equal(tf.argmax(y_pred_prob, 1), tf.argmax(Y, 1))
             accuracy = tf.reduce_mean(tf.cast(correct_prediction, "float"))
-            print("Accuracy:", accuracy.eval({self.x: X, self.y: Y}))
-        return
+            y_pred = y_pred_prob.eval({self.x: X, self.y: Y})
+        return y_pred
+            
 
 
 
@@ -144,6 +146,7 @@ if __name__ == '__main__':
     sys.path.append(lib_path)
     from preprocess.PreProcess import PreProcess, load_data
     from util.resampling import binary_downsampling, binary_upsampling
+    from util.metric import estimate_metric
 
     print 'Loading data and preprocessing ......'
     start_time = time.time()
@@ -170,9 +173,20 @@ if __name__ == '__main__':
     end = time.time()
     print 'Done. Took {} seconds.'.format(end - start)
     print
-
-    mlp.evaluate(X_train, Y_train)
+    
+    print 'Evaluating ......'
+    y_pred_train = mlp.evaluate(X_train, Y_train)[:,0]
+    result_train = estimate_metric(y_pred_train, y_train)
     end = time.time()
+    print result_train
+    print
+    
+    X_validate, y_validate, w_validate = load_data('../data/validate.csv', process_path, fit=False)
+    Y_validate = np.array([y_validate, -(y_validate-1)]).T
+    y_pred_validate = mlp.evaluate(X_validate, Y_validate)[:,0]
+    result_validate = estimate_metric(y_pred_validate, y_validate)
+    print result_validate
+    print
     print 'Complete. Took total of {} seconds.'.format(end - start)
     print
 
