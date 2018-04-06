@@ -6,6 +6,7 @@ import time
 
 create_views_script = 'create_views.sql'
 copy_data_ml_script = 'copy_data_ml.sql'
+copy_cut_data_ml_script = 'copy_data_ml_cuts.sql'
 copy_data_explore_script = 'copy_data_explore.sql'
 drop_views_script = 'drop_views.sql'
 
@@ -28,6 +29,7 @@ if __name__ == '__main__':
                         help='file name to copy to. ')
     parser.add_argument('--dbname', '-d', type=str, required=True,
                         help='database to connect to. ')
+    parser.add_argument('--cut', action='store_true')
     args = parser.parse_args()
 
     start_all = time.time()
@@ -51,6 +53,8 @@ if __name__ == '__main__':
     copy_data_script = copy_data_ml_script
     if args.sample_type == 'explore':
         copy_data_script = copy_data_explore_script
+    if args.cut:
+        copy_data_script = copy_cut_data_ml_script
 
     with open(args.output_fname, 'w') as w:
         sp.check_call(
